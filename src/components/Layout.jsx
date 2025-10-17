@@ -1,123 +1,107 @@
-import React, { useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { useAuth } from '../contexts/AuthContext';
-import './Layout.css';
+import React, { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { useNavigate, useLocation } from 'react-router-dom'
+import './Layout.css'
 
 const Layout = ({ children }) => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { user, signOut } = useAuth();
-  const location = useLocation();
-  const navigate = useNavigate();
+  const { user, signOut } = useAuth()
+  const navigate = useNavigate()
+  const location = useLocation()
+  const [sidebarOpen, setSidebarOpen] = useState(false)
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      navigate('/login');
+      await signOut()
+      navigate('/login')
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('Erro ao fazer logout:', error)
     }
-  };
+  }
 
-  const navigation = [
-    { name: 'Dashboard', href: '/', icon: 'dashboard' },
-    { name: 'Usuários', href: '/users', icon: 'people' },
-    { name: 'Doações', href: '/donations', icon: 'volunteer_activism' },
-    { name: 'Eventos', href: '/events', icon: 'event' },
-    { name: 'Voluntários', href: '/volunteers', icon: 'group' },
-  ];
+  const toggleSidebar = () => {
+    setSidebarOpen(!sidebarOpen)
+  }
+
+  const closeSidebar = () => {
+    setSidebarOpen(false)
+  }
+
+  const navItems = [
+    { path: '/dashboard', label: 'Dashboard', icon: '📊' },
+    { path: '/users', label: 'Usuários', icon: '👥' },
+    { path: '/donations', label: 'Doações', icon: '💰' },
+    { path: '/events', label: 'Eventos', icon: '📅' },
+    { path: '/volunteers', label: 'Voluntários', icon: '🤝' }
+  ]
 
   return (
     <div className="layout">
-      {/* Sidebar */}
-      <div className={`sidebar ${sidebarOpen ? 'sidebar-open' : ''}`}>
+      {/* Mobile Overlay */}
+      {sidebarOpen && (
+        <div className="sidebar-overlay open" onClick={closeSidebar}></div>
+      )}
+
+      <aside className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
         <div className="sidebar-header">
-          <div className="logo">
-            <h1>+1</h1>
-            <p>Mais de Nós</p>
+          <div className="sidebar-logo">
+            <div className="logo-icon">+1</div>
+            <div className="logo-text">Mais de Nós</div>
           </div>
-          <button 
-            className="sidebar-toggle"
-            onClick={() => setSidebarOpen(false)}
-          >
-            <span className="material-icons-round">close</span>
-          </button>
+          <div className="logo-subtitle">CRM Administrativo</div>
         </div>
 
         <nav className="sidebar-nav">
-          {navigation.map((item) => {
-            const isActive = location.pathname === item.href;
-            return (
-              <Link
-                key={item.name}
-                to={item.href}
-                className={`nav-item ${isActive ? 'nav-item-active' : ''}`}
-                onClick={() => setSidebarOpen(false)}
+          <div className="nav-section">
+            <div className="nav-section-title">Principal</div>
+            {navItems.map((item) => (
+              <a
+                key={item.path}
+                href={item.path}
+                className={`nav-item ${location.pathname === item.path ? 'active' : ''}`}
+                onClick={closeSidebar}
               >
-                <span className="material-icons-round">{item.icon}</span>
-                <span>{item.name}</span>
-              </Link>
-            );
-          })}
+                <span className="nav-icon">{item.icon}</span>
+                <span className="nav-label">{item.label}</span>
+              </a>
+            ))}
+          </div>
         </nav>
 
         <div className="sidebar-footer">
           <div className="user-info">
             <div className="user-avatar">
-              <span className="material-icons-round">person</span>
+              {user?.email?.charAt(0).toUpperCase()}
             </div>
             <div className="user-details">
-              <p className="user-name">{user?.email}</p>
-              <p className="user-role">Administrador</p>
+              <h4>Administrador</h4>
+              <p>{user?.email}</p>
             </div>
           </div>
-          <button className="logout-button" onClick={handleLogout}>
-            <span className="material-icons-round">logout</span>
-            <span>Sair</span>
+          <button onClick={handleLogout} className="logout-btn">
+            Sair
           </button>
         </div>
-      </div>
+      </aside>
 
-      {/* Overlay para mobile */}
-      {sidebarOpen && (
-        <div 
-          className="sidebar-overlay"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
-
-      {/* Main content */}
-      <div className="main-content">
-        {/* Header */}
+      <main className="main-content">
         <header className="main-header">
-          <button 
-            className="mobile-menu-button"
-            onClick={() => setSidebarOpen(true)}
-          >
-            <span className="material-icons-round">menu</span>
+          <button className="mobile-menu-btn" onClick={toggleSidebar}>
+            ☰
           </button>
-          
-          <div className="header-title">
-            <h1>CRM - Mais de Nós</h1>
-            <p>Painel de Controle Administrativo</p>
-          </div>
-
+          <h1 className="header-title">Painel Administrativo</h1>
           <div className="header-actions">
-            <div className="user-menu">
-              <div className="user-avatar-small">
-                <span className="material-icons-round">person</span>
-              </div>
-              <span className="user-email">{user?.email}</span>
-            </div>
+            <button className="notification-btn">
+              🔔
+              <span className="notification-badge"></span>
+            </button>
           </div>
         </header>
-
-        {/* Page content */}
-        <main className="page-content">
+        <div className="content-area">
           {children}
-        </main>
-      </div>
+        </div>
+      </main>
     </div>
-  );
-};
+  )
+}
 
-export default Layout;
+export default Layout

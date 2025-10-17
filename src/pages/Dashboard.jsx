@@ -1,95 +1,136 @@
-import React, { useState, useEffect } from 'react';
-import { supabase } from '../lib/supabase';
-import './Dashboard.css';
+import React, { useState, useEffect } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { supabase } from '../lib/supabase'
+import './Dashboard.css'
 
 const Dashboard = () => {
+  const { user } = useAuth()
   const [stats, setStats] = useState({
-    totalUsers: 0,
     totalDonations: 0,
-    totalEvents: 0,
     totalVolunteers: 0,
-    recentDonations: [],
-    recentUsers: []
-  });
-  const [loading, setLoading] = useState(true);
+    totalEvents: 0,
+    totalRegistrations: 0,
+    totalDonationValue: 0
+  })
+  const [recentActivities, setRecentActivities] = useState([])
+  const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    fetchDashboardData();
-  }, []);
+    loadDashboardData()
+  }, [])
 
-  const fetchDashboardData = async () => {
+  const loadDashboardData = async () => {
     try {
-      setLoading(true);
-      
-      // Buscar estatísticas básicas
-      const [usersResult, donationsResult, eventsResult, volunteersResult] = await Promise.all([
-        supabase.from('users').select('*', { count: 'exact' }),
-        supabase.from('donations').select('*', { count: 'exact' }),
-        supabase.from('events').select('*', { count: 'exact' }),
-        supabase.from('volunteers').select('*', { count: 'exact' })
-      ]);
+      setLoading(true)
 
-      // Buscar doações recentes
-      const { data: recentDonations } = await supabase
-        .from('donations')
+      // Buscar estatísticas das doações
+      const { data: donations, error: donationsError } = await supabase
+        .from('doacoes')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
 
-      // Buscar usuários recentes
-      const { data: recentUsers } = await supabase
-        .from('users')
+      if (donationsError) throw donationsError
+
+      // Buscar estatísticas dos voluntários
+      const { data: volunteers, error: volunteersError } = await supabase
+        .from('voluntarios')
         .select('*')
-        .order('created_at', { ascending: false })
-        .limit(5);
+
+      if (volunteersError) throw volunteersError
+
+      // Buscar estatísticas dos eventos
+      const { data: events, error: eventsError } = await supabase
+        .from('eventos')
+        .select('*')
+
+      if (eventsError) throw eventsError
+
+      // Buscar estatísticas das inscrições
+      const { data: registrations, error: registrationsError } = await supabase
+        .from('inscricoes_eventos')
+        .select('*')
+
+      if (registrationsError) throw registrationsError
+
+      // Calcular total de doações em dinheiro
+      const totalDonationValue = donations
+        ?.filter(d => d.valor && d.tipo_doacao === 'dinheiro')
+        ?.reduce((sum, d) => sum + (d.valor || 0), 0) || 0
 
       setStats({
-        totalUsers: usersResult.count || 0,
-        totalDonations: donationsResult.count || 0,
-        totalEvents: eventsResult.count || 0,
-        totalVolunteers: volunteersResult.count || 0,
-        recentDonations: recentDonations || [],
-        recentUsers: recentUsers || []
-      });
+        totalDonations: donations?.length || 0,
+        totalVolunteers: volunteers?.length || 0,
+        totalEvents: events?.length || 0,
+        totalRegistrations: registrations?.length || 0,
+        totalDonationValue: totalDonationValue
+      })
+
+      // Criar atividades recentes
+      const activities = []
+      
+      // Adicionar doações recentes
+      const recentDonations = donations?.slice(0, 3) || []
+      recentDonations.forEach(donation => {
+        activities.push({
+          id: `donation-${donation.id}`,
+          type: 'donation',
+          icon: '💰',
+          title: `Nova doação de ${donation.nome_doador}`,
+          description: `${donation.tipo_doacao}${donation.valor ? ` - R$ ${donation.valor.toFixed(2)}` : ''}`,
+          time: new Date(donation.created_at).toLocaleString('pt-BR')
+        })
+      })
+
+      // Adicionar voluntários recentes
+      const recentVolunteers = volunteers?.slice(0, 2) || []
+      recentVolunteers.forEach(volunteer => {
+        activities.push({
+          id: `volunteer-${volunteer.id}`,
+          type: 'volunteer',
+          icon: '🤝',
+          title: `Novo voluntário: ${volunteer.nome}`,
+          description: `Área: ${volunteer.area_interesse}`,
+          time: new Date(volunteer.created_at).toLocaleString('pt-BR')
+        })
+      })
+
+      // Ordenar por data e pegar os 5 mais recentes
+      setRecentActivities(activities.slice(0, 5))
+
     } catch (error) {
-      console.error('Erro ao buscar dados do dashboard:', error);
+      console.error('Erro ao carregar dados do dashboard:', error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
+
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('pt-BR', {
+      style: 'currency',
+      currency: 'BRL'
+    }).format(value)
+  }
 
   if (loading) {
     return (
-      <div className="dashboard-loading">
-        <div className="loading"></div>
-        <p>Carregando dashboard...</p>
+      <div className="dashboard">
+        <div className="loading-container">
+          <div className="loading-spinner"></div>
+          <p>Carregando dados...</p>
+        </div>
       </div>
-    );
+    )
   }
 
   return (
     <div className="dashboard">
       <div className="dashboard-header">
-        <h1>Dashboard</h1>
-        <p>Visão geral do sistema</p>
+        <h1>Dashboard - Mais de Nós</h1>
+        <p>Bem-vindo ao painel administrativo, {user?.email}!</p>
       </div>
 
-      {/* Estatísticas */}
       <div className="stats-grid">
         <div className="stat-card">
-          <div className="stat-icon">
-            <span className="material-icons-round">people</span>
-          </div>
-          <div className="stat-content">
-            <h3>{stats.totalUsers}</h3>
-            <p>Total de Usuários</p>
-          </div>
-        </div>
-
-        <div className="stat-card">
-          <div className="stat-icon">
-            <span className="material-icons-round">volunteer_activism</span>
-          </div>
+          <div className="stat-icon">💰</div>
           <div className="stat-content">
             <h3>{stats.totalDonations}</h3>
             <p>Total de Doações</p>
@@ -97,9 +138,23 @@ const Dashboard = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">
-            <span className="material-icons-round">event</span>
+          <div className="stat-icon">💵</div>
+          <div className="stat-content">
+            <h3>{formatCurrency(stats.totalDonationValue)}</h3>
+            <p>Valor Total Arrecadado</p>
           </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">🤝</div>
+          <div className="stat-content">
+            <h3>{stats.totalVolunteers}</h3>
+            <p>Total de Voluntários</p>
+          </div>
+        </div>
+
+        <div className="stat-card">
+          <div className="stat-icon">📅</div>
           <div className="stat-content">
             <h3>{stats.totalEvents}</h3>
             <p>Total de Eventos</p>
@@ -107,102 +162,37 @@ const Dashboard = () => {
         </div>
 
         <div className="stat-card">
-          <div className="stat-icon">
-            <span className="material-icons-round">group</span>
-          </div>
+          <div className="stat-icon">📝</div>
           <div className="stat-content">
-            <h3>{stats.totalVolunteers}</h3>
-            <p>Total de Voluntários</p>
+            <h3>{stats.totalRegistrations}</h3>
+            <p>Inscrições em Eventos</p>
           </div>
         </div>
       </div>
 
-      {/* Conteúdo principal */}
-      <div className="dashboard-content">
-        {/* Doações recentes */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2>Doações Recentes</h2>
-            <a href="/donations" className="btn btn-outline">Ver todas</a>
-          </div>
-          <div className="card">
-            {stats.recentDonations.length > 0 ? (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Nome</th>
-                      <th>Valor</th>
-                      <th>Data</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.recentDonations.map((donation) => (
-                      <tr key={donation.id}>
-                        <td>{donation.name}</td>
-                        <td>R$ {donation.amount}</td>
-                        <td>{new Date(donation.created_at).toLocaleDateString('pt-BR')}</td>
-                        <td>
-                          <span className="badge badge-success">Confirmada</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+      <div className="recent-activities">
+        <h2>Atividades Recentes</h2>
+        {recentActivities.length > 0 ? (
+          <div className="activity-list">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className="activity-item">
+                <div className="activity-icon">{activity.icon}</div>
+                <div className="activity-content">
+                  <p><strong>{activity.title}</strong></p>
+                  <p className="activity-description">{activity.description}</p>
+                  <span className="activity-time">{activity.time}</span>
+                </div>
               </div>
-            ) : (
-              <div className="empty-state">
-                <span className="material-icons-round">volunteer_activism</span>
-                <p>Nenhuma doação encontrada</p>
-              </div>
-            )}
+            ))}
           </div>
-        </div>
-
-        {/* Usuários recentes */}
-        <div className="dashboard-section">
-          <div className="section-header">
-            <h2>Usuários Recentes</h2>
-            <a href="/users" className="btn btn-outline">Ver todos</a>
+        ) : (
+          <div className="no-activities">
+            <p>Nenhuma atividade recente encontrada.</p>
           </div>
-          <div className="card">
-            {stats.recentUsers.length > 0 ? (
-              <div className="table-container">
-                <table className="table">
-                  <thead>
-                    <tr>
-                      <th>Nome</th>
-                      <th>Email</th>
-                      <th>Data de Cadastro</th>
-                      <th>Status</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {stats.recentUsers.map((user) => (
-                      <tr key={user.id}>
-                        <td>{user.name || 'N/A'}</td>
-                        <td>{user.email}</td>
-                        <td>{new Date(user.created_at).toLocaleDateString('pt-BR')}</td>
-                        <td>
-                          <span className="badge badge-success">Ativo</span>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            ) : (
-              <div className="empty-state">
-                <span className="material-icons-round">people</span>
-                <p>Nenhum usuário encontrado</p>
-              </div>
-            )}
-          </div>
-        </div>
+        )}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default Dashboard;
+export default Dashboard
