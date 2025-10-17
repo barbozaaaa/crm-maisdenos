@@ -1,0 +1,101 @@
+.volunteers {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.volunteers-header {
+  margin-bottom: 2rem;
+}
+
+.volunteers-header h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #1f2937;
+  margin-bottom: 0.5rem;
+}
+
+.volunteers-header p {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.volunteers-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  gap: 1rem;
+}
+
+.volunteers-loading p {
+  color: #6b7280;
+  font-size: 1rem;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.btn-sm {
+  padding: 0.5rem;
+  font-size: 0.75rem;
+}
+
+.btn-sm .material-icons-round {
+  font-size: 1rem;
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.empty-state .material-icons-round {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.empty-state p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Responsivo */
+@media (max-width: 768px) {
+  .volunteers-header h1 {
+    font-size: 1.5rem;
+  }
+  
+  .empty-state {
+    padding: 2rem;
+  }
+  
+  .empty-state .material-icons-round {
+    font-size: 2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .volunteers {
+    padding: 0;
+  }
+  
+  .volunteers-header {
+    margin-bottom: 1.5rem;
+  }
+  
+  .volunteers-header h1 {
+    font-size: 1.25rem;
+  }
+  
+  .empty-state {
+    padding: 1.5rem;
+  }
+}
