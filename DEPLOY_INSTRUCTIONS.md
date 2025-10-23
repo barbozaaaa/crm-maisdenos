@@ -145,3 +145,4 @@ Após o deploy, seu CRM estará disponível 24/7 com:
 - ✅ **Deploy automático** (se conectado ao Git)
 
 **Boa sorte com o deploy!** 🚀
+

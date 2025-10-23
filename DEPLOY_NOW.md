@@ -180,3 +180,4 @@ Solução: Configure as senhas no painel do Supabase
 Seu CRM estará online em menos de 5 minutos!
 
 **Lembre-se:** Este é um sistema profissional e completo, pronto para produção! 🎯
+

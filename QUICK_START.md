@@ -45,3 +45,4 @@ Seu CRM estará online em menos de 5 minutos! 🎉
 ---
 
 **Precisa de ajuda?** Consulte o arquivo `GITHUB_SETUP.md` para instruções detalhadas.
+
