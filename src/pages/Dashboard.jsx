@@ -1,10 +1,8 @@
 import React, { useState, useEffect } from 'react'
-import { useAuth } from '../contexts/AuthContext'
 import { supabase } from '../lib/supabase'
 import './Dashboard.css'
 
 const Dashboard = () => {
-  const { user } = useAuth()
   const [stats, setStats] = useState({
     totalDonations: 0,
     totalVolunteers: 0,

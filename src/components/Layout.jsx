@@ -1,22 +1,10 @@
 import React, { useState } from 'react'
-import { useAuth } from '../contexts/AuthContext'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import './Layout.css'
 
 const Layout = ({ children }) => {
-  const { user, signOut } = useAuth()
-  const navigate = useNavigate()
   const location = useLocation()
   const [sidebarOpen, setSidebarOpen] = useState(false)
-
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      navigate('/login')
-    } catch (error) {
-      console.error('Erro ao fazer logout:', error)
-    }
-  }
 
   const toggleSidebar = () => {
     setSidebarOpen(!sidebarOpen)
@@ -70,14 +58,14 @@ const Layout = ({ children }) => {
         <div className="sidebar-footer">
           <div className="user-info">
             <div className="user-avatar">
-              {user?.email?.charAt(0).toUpperCase()}
+              A
             </div>
             <div className="user-details">
               <h4>Administrador</h4>
-              <p>{user?.email}</p>
+              <p>admin@maisdenos.online</p>
             </div>
           </div>
-          <button onClick={handleLogout} className="logout-btn">
+          <button className="logout-btn">
             Sair
           </button>
         </div>
